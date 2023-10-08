@@ -1,0 +1,35 @@
+<?php
+ini_set('error_reporting', E_ALL);
+ini_set( 'display_errors', 1 );
+define('CHARSET', 'UTF-8');
+/**************************************************
+
+
+classic bb type board. 
+Simplified as much as possible.
+
+included main files; class.php
+
+
+
+option of admin installing in mysql or as file system.
+
+written with xml for easy data management, responsive js, css and html.
+
+by alex kalas, akala762@gmail.com
+
+
+**************************************************/
+include('classes.php');
+
+$node=new NodeFunctions;
+$template=new UserTemplate;
+//necessary headers
+
+
+
+$template->run_dynamic_page(); 
+
+?>
+
+

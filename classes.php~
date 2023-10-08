@@ -1,0 +1,1847 @@
+
+<?php
+ini_set('display_errors',1);
+error_reporting(E_ALL);
+//echo exec('whoami');
+
+header ("Content-Type: text/html; charset=utf-8") ; 
+date_default_timezone_set('America/Los_Angeles');
+/**************************************************
+
+
+Simplified as much as possible.
+
+uses only flatfile array data to store blog posts and folders w/ css and jquery to make it nice! this is a small cms for those who want to use flat files and no mysql datbase. IT IS pure flatfile staffuser config is in classes.php.
+
+RECOMMENDED TO CHANGE THE SALT and SALT2 before you release on your server.
+
+included main files; class.php, index.php
+
+ALL DATA STORED IN THIS FILE WITH ARRAY INCLUDING BANS and CONFIG 
+
+
+written by alex kalas
+ajax762@hushmail.com
+need to finish:
+
+ for each forum folder hard coded array of all topics in that forum
+
+each post put into thread(#theadtotal).php
+*
+
+
+to do:
+back link in blog post
+* side nav links left and link/ads right, added polished images
+
+
+
+**************************************************/
+session_start();
+
+class Constants{
+public $salt='amk8agio21';//security salt change all salts to a unique salts before running on server!
+public $salt2='gtrsak3230';
+
+public $masterusername='admininstrator';
+
+public $adminpanelpassword='pinkpony52';//(admins password for panel)allows full use of admin panel with used with masterpassword
+
+public $masterpassword='seeyouspacecowboy';//(admins password) also allows skipping of captcha and requirement for adminpanel (for admin user)
+
+
+public $adminpanelenabled=true;//still allows password login for captcha skip, shuts off admin panel to login for administrative actions;remotely/create topics etc
+
+
+
+
+
+
+public $saltkeyset;
+
+
+public $language_directory='languages/';
+public $resource_directory='res/';
+public $blog_directory='data/blog/';
+public $library_directory='lib/';
+public $data_directory='data/';
+public $upload_directory='data/uploads/';
+
+public $userlog_file='data/userlog.htm';//log of bad user and abusive spammers
+public $stafflog_file='data/stafflog.htm';//log staff actions
+public $admincontact_file='data/admincontact.htm';
+public $rssfeed_file='xml/feed.xml';
+//default is set to using xml data storage and using only flatfile database vs mysql data tables.
+
+public $language;
+public $language_id;
+public $time;
+
+
+public $language_data=array();
+public $settings=array();
+
+
+
+public $board_settings=array();
+
+    public function __construct() {
+    $this->time=time();
+    //$this->blog_directory=$_SERVER['DOCUMENT_ROOT'].'/'.$this->blog_directory;
+    
+    
+    
+//random algorithm for ip encode
+$this->saltkeyset=array(
+//http://textmechanic.com/Word-Scrambler$this->settings['blogfileextension']l
+
+//62bit 0-9a-zA-Z
+//array('0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'),
+
+
+
+);
+
+
+        if (!isset($_SESSION['time_in'])){
+    $_SESSION['time_in']=$this->time;
+    }
+    if (!isset($_SESSION['page_views'])){
+    $_SESSION['page_views']=0;
+
+    }
+
+//sortpriority is lowest first, userpower limits users the # and above to post
+$this->board_settings = array(
+'staff updates'=>array(//name corisponds with actual folder in /data/
+'icon'=>'res/yin_yang.png',
+'title'=>'Gyre Reality Updates',
+'description'=>'<P style="color:#a6c;font-weight:bold;">The latest updates for this blogsphere and rants about anything.</P>',
+
+'sortpriority'=>0,
+'allowfileupload'=>1,//allow anon user uploading in this blog
+'allowcomment'=>1,//allow anon user comments
+'password'=>'',//password required for posting topic
+'ftpmode'=>1,//new topic only made with ftp or server end
+'maxpostsintopic'=>1000,//number of comment posts allowed in a single blog for this blog category
+'posttimelock'=>365,//how many days until posting locked
+
+
+),
+'random'=>array(//name corisponds with actual folder in /data/
+'icon'=>'http://e.deviantart.net/emoticons/b/biggrin.gif',
+'title'=>'Random',
+'description'=>'<P style="color:#f6c;font-weight:bold;">anything...</P>',
+
+'sortpriority'=>0,
+'allowfileupload'=>1,//allow anon user uploading in this blog
+'allowcomment'=>1,//allow anon user comments
+'password'=>'',//password required for posting topic
+'ftpmode'=>0,//new topic only made with ftp or server end
+'maxpostsintopic'=>1000,//number of comment posts allowed in a single blog for this blog category
+'posttimelock'=>365,//how many days until posting locked
+
+
+),
+
+
+);
+
+		$this->settings = array(
+		'mainfile'=>'index.php',
+		
+		'member'=>array('lolia'=>array('127.0.','localhost','password')),//members bypass captcha,localized with ip address string, blank leaves open to any user
+		
+		
+		'staffcommandoperator'=>'|',
+		'template_post'=>'<div>%1$s</div>',
+				'blogfileextension'=>'.htm',
+		'contentpreview_list'=>1, //how many blog posts to preview with additional content
+		'contentpreview_size'=>400, //content size
+		'minuser_length'=>0,
+		'maxuser_length'=>140,
+		'minsubject_length'=>5,
+		'maxsubject_length'=>200,
+//similar to comments small posts
+		'minpost_length'=>5,
+		'maxpost_length'=>1000,
+//first post is the topic it can be a blog type posting detailed information etc
+		'mintopic_length'=>15,
+		'maxtopic_length'=>30000,
+		
+		'request_per_fivemin'=>140,
+		'post_per_fivemin'=>2.5,
+		'timebetween_comment'=>25+rand(0,8),
+		'timebetween_topic'=>125+rand(0,25),		
+				'bannedsend'=>'https://www.google.bg/#q=',
+				'maxtopics_until_archive'=>140,
+'maxfileage_until_archive'=>86400*60,//in seconds, based on file age (posts included) basically bumping expiration
+		'runningmysql'=>false,
+'archivestamp'=>'Y-M',
+		'datestamp'=>'Y-M-d-H:i:s',
+		'defaultuser'=>'anonymous',
+		
+		'maxfilesize'=>1048576*3,//uploading max size in bytes
+		'maxuploadpersession'=>20,//limit upload per session ignores further uploading
+
+		);
+
+
+        $this->language_data = array(
+	0=>array(
+	'panelcommandloggedout'=>'[logged out]',
+	'panelcommandloggedin'=>'[logged in]',
+	'panelcommand'=>'<div style="color:#850;">%1$s</div><div class="staff_help" style="background-color:#111111;"><div style="color:#0c0; font-weight:bold; font-size:20pt;">The terminal. </div>For staff commands type help in the command form; the operator is ['.$this->settings["staffcommandoperator"].']. The operator is used to separate command entries. <p></p> login form: [master password]'.$this->settings["staffcommandoperator"].'[admin panel secret phrase] <p></p> command form: [command name #1]'.$this->settings["staffcommandoperator"].'[command action #2]'.$this->settings["staffcommandoperator"].'[command action #3] ...</div><form action="index.php?p=staff#bottom" method="post"><input type="password" name="password" value="%2$s" class="staff_terminal" maxlength="30"></br><textarea class="staff_terminal" name="command" style="width:700px;height:500px;"></textarea><br /><input type="submit" value="Run Query"><a href="#bottom" name="bottom"></a></form>',
+	
+	
+'post_helpdescription'=>'<a id="button"><h2>Help</h2></a><div id="posthelp" style=""><P><b>List of bbcode tags that are allowed:</b>[#](post number)respond to user by post number[/#] [url=][/url] [h(2-4)][/h(2-4)] [hidden]hide the text, show when hovered[/hidden] [blockquote][/blockquote] [b][/b] [i][/i] [color=][/color] [img][/img] [youtube][/youtube][code][/code][p][/p]</P><P><b>How to lock topic:</b> Make sure the name of the topic contains "[locked]" (case insensitive)</P><P><b>Allowed upload Filetypes:</b>.txt, .doc, .pdf, .jpg, .png, .gif <br /><b>maximum file size:</b> %1$d bytes.</P></div>
+<script type="text/javascript">
+
+window.onload=document.getElementById("posthelp").style.display="none";
+$("#button").click(function () {
+if ($("#posthelp").css("display")=="none") {
+$("#posthelp").show("slow");
+}else{
+$("#posthelp").hide("slow");
+
+}
+});
+
+</script><noscript><b>no js</b></noscript>
+
+',
+
+	'year'=>'year(s)',
+	'week'=>'week(s)',
+	'day'=>'day(s)',
+	'hour'=>'hour(s)',
+	'minute'=>'minute(s)',
+	'second'=>'second(s)',
+	
+
+'bannedtext'=>'YOU WERE BANNED FROM GYREREALITY; ',
+
+	),
+        
+	);
+    
+    
+switch (isset($_GET['l'])) {
+    case 0:
+    case '':
+        	$this->language='english';
+		$this->language_id=0;
+        break;
+    case 1:
+        	$this->language='español';
+		$this->language_id=1;
+        break;
+    default:
+    $this->language='english';
+    $this->language_id=0;
+}
+
+    
+    
+    }
+
+public function get_langset(){
+
+return $this->language_data;
+}
+
+}
+
+class Security_and_SpamHandler extends NodeFunctions{
+public $isbot=false;
+public $bans_location;
+    public function __construct() {
+        parent::__construct();
+	
+
+    $this->run_banlist();
+    $this->run_request_spammer();
+    }
+    
+    
+    
+        
+    
+	public function user_skipbotcheck() {
+		//priviliged users with correct pass and ip may avoid bot and captcha check.
+		//$_SERVER['REMOTE_ADDR']
+		
+  $_COOKIE['password']=!isset(  $_COOKIE['password'])?'':$_COOKIE['password'];
+  
+  if (md5($this->salt.$this->masterpassword.$this->salt2)==$_COOKIE['password']) {
+  return true;
+  }
+  
+       return false;
+    }
+
+	public function user_adminpowerlevel() {
+  $_COOKIE['password']=!isset(  $_COOKIE['password'])?'':$_COOKIE['password'];
+  
+  if (md5($this->salt.$this->masterpassword.$this->salt2)!=$_COOKIE['password']) {
+  return false;
+  }
+  
+       return true;
+    }
+    
+    
+    
+    public function handle_banned_user($a) {
+    
+header('Location: '.$this->settings['bannedsend'].$this->language_data[$this->language_id]['bannedtext'].$a);
+die('<META HTTP-EQUIV="refresh" CONTENT="0;URL='.$this->settings['bannedsend'].'"><script><iframe>');
+
+    }
+    
+    public function run_request_spammer(){
+    
+   // $this->settings['request_per_fivemin'];
+  //  $this->settings['post_per_fivemin']; $this->settings['post_per_fivemin'] (time()-$_SESSION['time_in'])/
+
+
+  if( ( $_SESSION['page_views'] > 10 && time()-$_SESSION['time_in']>600 ) &&  $_SESSION['page_views']/((time()-$_SESSION['time_in'])/300)>$this->settings['request_per_fivemin']  ) {
+    $this->handle_banned_user('spammer');
+    }
+    
+    }
+
+public function run_banlist() {
+$isbanned=0;
+
+			if (!isset($_SESSION['runblist'])){
+
+		//require_once($this->bans_location);
+		
+		/*
+list of bans;
+*/
+
+
+$banlist = 
+array(
+/*
+*
+
+ip, cidr mask range, hostname, reason for banning
+* 
+*ranges: 8 (Class A), 16 (Class B) or 24 (Class C).
+* 
+*/
+
+//array('127.0.0.1','16','localhosts','reason for ban'),
+
+array('220.248.0.0','14','','china - hacks and spams'),
+
+
+
+
+
+
+
+
+
+);
+		
+		for($i=0;$i<sizeof($banlist);$i++){
+		if ( 
+		//$this->ipcidrcheck($banlist[$i][0],$banlist[$i][1]) 
+		
+		$this->ip_in_network($this->get_ip(), $banlist[$i][0],$banlist[$i][1]) ||
+		$this->blocked_hostname() ) {
+		$isbanned=1; $_SESSION['bannedreason']=$banlist[$i][3];
+		$this->handle_banned_user($banlist[$i][3]);
+				   
+		}
+		
+		}
+
+		    $_SESSION['runblist']=$isbanned;
+		    
+			}//end
+
+}
+
+	function check_webbot_user() {
+	  if (isset($_SERVER['HTTP_USER_AGENT']) && preg_match('/bot|crawl|slurp|spider/i', $_SERVER['HTTP_USER_AGENT'])) {
+	    $this->isbot=true;
+	  }
+	  else {
+	    return FALSE;
+	  }
+	  
+
+
+	}
+
+
+
+public function generate_randcolor($min,$max)
+{
+$max=$max>16||$max==null?$max=15:$max;
+$min=$min==null?$min=0:$min;
+
+
+$hex16=array('0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f');
+
+
+$color='#';
+for ($i=0;$i<6;$i++){
+$bit=rand($min,$max);
+
+$color.=$hex16[$bit];
+
+}
+return $color;
+}
+
+
+		public function generate_captcha($min,$max,$type) {
+		//$_SERVER['REMOTE_ADDR']
+
+if ($min==null&&$max==null) { $min=3;$max=6; }
+
+
+
+
+$ran=array('0','1','2','3','4','5','6','7','8','9','a','b','c','d','e','f','g','h','i','j','k','l','m','n');
+
+$captcha='';
+$showcaptcha='';
+
+
+for ($i=0;$i<rand($min,$max);$i++){
+$realbitcolor=$this->generate_randcolor(2,7);
+
+$rand=$ran[rand(0,23)];
+
+$captcha.=$rand;
+$showcaptcha.='<span style="color:'.$this->generate_randcolor(9,'').';">'.$ran[rand(0,23)].'</span><span style="color:'.$realbitcolor.';">'.$rand.'</span><span style="color:'.$this->generate_randcolor(9,'').';">'.$ran[rand(0,23)].'</span>';
+
+
+}
+
+
+$_SESSION['captcha']=$captcha;
+	//htmlspecialchars("<a href='test'>Test</a>", UTF-8);
+
+
+
+
+
+
+
+return '<span class="captcha">type the darker color<br />'.$showcaptcha.'</span>';
+
+
+	}
+
+
+
+
+		public function verify_captcha($skip) {
+
+		
+if (isset($_POST['captcha']) && isset($_SESSION['captcha']) && $_POST['captcha']==$_SESSION['captcha'] || $skip){
+$_SESSION['captcha']='';
+return true;
+}
+return false;
+								}
+	
+	
+	public function blocked_hostname(){
+	//hostname/useragent
+	$badhost=array(
+	'proxy',
+	'pro',
+	'ghost',
+	'hide',
+	'ass',
+	);
+	
+	if (in_array(gethostbyaddr($this->get_ip()), $badhost) || in_array($_SERVER['HTTP_USER_AGENT'],$badhost)) {
+	
+	return true;
+	}
+	return false;
+	}
+	
+public function get_ip()
+{
+
+if (!empty($_SERVER["HTTP_CLIENT_IP"]))
+{
+//check for ip from share internet
+$ip = $_SERVER["HTTP_CLIENT_IP"];
+}
+elseif (!empty($_SERVER["HTTP_X_FORWARDED_FOR"]))
+{
+// Check for the Proxy User
+$ip = $_SERVER["HTTP_X_FORWARDED_FOR"];
+}
+else
+{
+$ip = $_SERVER["REMOTE_ADDR"];
+}
+// This will print user's real IP Address
+// does't matter if user using proxy or not.
+return $ip;
+
+}
+     public function ipcidrcheck ($IP, $CIDR) {
+    list ($net, $mask) = split ("/", $CIDR);
+   
+    $ip_net = ip2long ($net);
+    $ip_mask = ~((1 << (32 - $mask)) - 1);
+
+    $ip_ip = ip2long ($IP);
+
+    $ip_ip_net = $ip_ip & $ip_mask;
+
+    return ($ip_ip_net == $ip_net);
+  }
+    
+	   public function ip_in_network($ip, $net_addr, $net_mask){
+	    if($net_mask <= 0){ return false; }
+		$ip_binary_string = sprintf("%032b",ip2long($ip));
+		$net_binary_string = sprintf("%032b",ip2long($net_addr));
+		return (substr_compare($ip_binary_string,$net_binary_string,0,$net_mask) === 0);
+	}
+	
+	
+	
+	
+	
+}
+
+
+
+
+class AdministrativeTools extends NodeFunctions{
+
+public function panelprocessquery() {
+
+/*
+postpone admin panel for now
+ 
+ */
+
+
+
+$a=isset($_POST['command'])?$_POST['command']:null;
+$p=explode($this->settings["staffcommandoperator"], $a);
+$password=isset($_POST['password'])?$_POST['password']:null;
+$passwordform=explode($this->settings["staffcommandoperator"], $password);
+$pass=isset($_POST['password'])?$_POST['password']:null;
+
+
+
+
+$msgu=sizeof($passwordform)>1?$this->language_data[$this->language_id]['panelcommandloggedin']:$this->language_data[$this->language_id]['panelcommandloggedout'];
+echo sprintf($this->language_data[$this->language_id]['panelcommand'],$msgu,$pass);
+
+if ( sizeof($p)>30 ||sizeof($p)<1 || !isset($_POST['command'])|| $pass==null){ return; }
+setcookie("password",md5($this->salt.$_POST['password'].$this->salt2), $this->time+86400*365); 
+
+if ( !$this->adminpanelenabled ) { echo '<div>admin panel is disabled - logging in to bypass captcha is retained.</div>'; return; };
+
+
+if ($passwordform[1]!=$this->adminpanelpassword || $passwordform[0]!=$this->masterpassword) { $_SESSION['staffbadauth']+=1; if ($_SESSION['staffbadauth']>4) { $this->handle_banned_user('spam'); } echo'<div class="error">you are not authorized '.$_SESSION['staffbadauth'].'</div>'; return; }
+
+			switch($p[0]) {
+			case 'help':
+echo "commands: makeforum, removeforum, maketopic [name of blog forum] [(YYMMDD) + desired name of topic] [topic content including html and excluding the operator]";
+			break;
+			
+			case 'maketopic':
+echo "posting the following to '".$p[1]."', named '".$p[2]."'. <p></p><textarea style='width:400px;height:300px;'>".$p[3]."</textarea>";
+
+		if (is_dir($this->blog_directory.''.$p[1])) {
+
+$r=$this->readwritefile($this->blog_directory.''.$p[1].'/'.$p[2].$this->settings['blogfileextension'],'w',stripslashes($p[3]));
+	}else{ 
+		echo '<P></P>"'.$this->blog_directory.''.$p[1].'" directory doesnt exist.';
+	}
+
+			break;
+				
+			case 'ban':
+
+
+			break;
+			//or alternate deny in .htaccess
+			case 'htaccess':
+
+			break;
+			
+			case 'removeban':
+
+			break;
+			case 'install':
+
+			break;
+			case 'makeforum':
+
+
+
+if (mkdir($this->blog_directory.''.$p[1], 0755)){
+print "<div>".$p[1]." was made</div>";
+
+}
+
+			break;
+						
+			case 'removeforum':
+
+//require password of forum and admin master password
+if ($this->deltree($this->blog_directory.$p[1])){
+print "<div>".$p[1]." was removed</div>";
+
+}
+			break;
+			// create new board forum
+
+
+			
+default:
+print '<div class="error">no commands found for your query.</div>';
+break;
+			}
+
+}
+
+
+
+
+}
+
+class NodeFunctions extends Constants {
+    public $name;
+    public $subject;
+    public $comment;
+    public $file;
+    protected $ipsalt='ake9afd0zkg28';
+    public function __construct() {
+    parent::__construct();
+
+
+}
+
+
+
+
+public function dirtoarray($dir,$showdir=true,$dironly=false) {
+  if (!is_dir($dir)) { return false;}
+   $result = array();
+
+   $cdir = scandir($dir);
+   foreach ($cdir as $key => $value)
+   {
+      if (!in_array($value,array(".","..")))
+      {
+		  $isdir=is_dir($dir . DIRECTORY_SEPARATOR . $value);
+		  
+         if ( ( $showdir )&& $isdir)
+         {
+         $result[$value] = $this->dirtoarray($dir . DIRECTORY_SEPARATOR . $value);
+         }
+         else if (!$isdir) 
+         {
+         if (!$dironly)   $result[] = $value;
+         }
+      }
+   }
+  
+   return $result;
+} 
+
+
+public function recursive_directory_delete($dir)
+{
+     // if the path has a slash at the end we remove it here
+     if(substr($directory,-1) == '/')
+     {
+          $directory = substr($directory,0,-1);
+     }
+
+     // if the path is not valid or is not a directory ...
+     if(!file_exists($directory) || !is_dir($directory))
+     {
+          // ... we return false and exit the function
+          return FALSE;
+
+     // ... if the path is not readable
+     }elseif(!is_readable($directory))
+     {
+          // ... we return false and exit the function
+          return FALSE;
+
+     // ... else if the path is readable
+     }else{
+
+          // we open the directory
+          $handle = opendir($directory);
+
+          // and scan through the items inside
+          while (FALSE !== ($item = readdir($handle)))
+          {
+               // if the filepointer is not the current directory
+               // or the parent directory
+               if($item != '.' && $item != '..')
+               {
+                    // we build the new path to delete
+                    $path = $directory.'/'.$item;
+
+                    // if the new path is a directory
+                    if(is_dir($path))
+                    {
+                         // we call this function with the new path
+                         recursive_directory_delete($path);
+
+                    // if the new path is a file
+                    }else{
+                         // we remove the file
+                         unlink($path);
+                    }
+               }
+          }
+          // close the directory
+          closedir($handle);
+
+          // return success
+          return TRUE;
+     }
+} 
+
+
+   public function is_rss($feedxml) {
+    @$feed = new SimpleXMLElement($feedxml);
+
+    if ($feed->channel->item) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+public function is_atom($feedxml) {
+    @$feed = new SimpleXMLElement($feedxml);
+
+    if ($feed->entry) {
+        return true;
+    } else {
+        return false;
+    }
+}     
+    
+	public function get_username() {
+return $_COOKIE['username'];
+       
+    }
+    public function get_page_id(){
+
+return isset($_GET['p'])?htmlentities(substr(basename($_GET['p']),0,100)):null;
+    return;
+    }
+public function get_topic_id(){
+
+return isset($_GET['t'])?htmlentities(substr(basename($_GET['t']),0,200)):null;
+    return;
+    }
+    
+public function get_section_id(){
+
+return isset($_GET['s'])?htmlentities(substr(basename($_GET['s']),0,200)):null;
+    return;
+    
+    
+    }
+
+
+
+public function readwritefile($x,$y,$z)
+{
+$get=null;
+
+$fp = fopen($x,$y);
+
+if (flock($fp, LOCK_EX)) {  // acquire an exclusive lock
+   // ftruncate($fp, 0);      // truncate file
+   if ($y=='a'||$y=='w'){ if (!fwrite($fp, $z) ){ echo 'fail write, check permissions.'; fclose($fp); return false;} 
+	   }else if($y=='r'){ $get=fread($fp, filesize($x)); }
+    fflush($fp);            // flush output before releasing the lock
+    flock($fp, LOCK_UN);    // release the lock
+} 
+fclose($fp);
+
+return $get;
+}
+
+
+
+
+
+
+
+public function time_elapsed($hist){
+
+$seconds=$this->time-$hist;
+
+$elapsed=date($this->settings['datestamp'],$hist);
+
+if ($seconds / 31556926 > 11 )
+{
+return $elapsed;
+}
+
+    $bit = array(
+        $this->language_data[$this->language_id]['year']=>array( $seconds / 31556926,12),
+         $this->language_data[$this->language_id]['week']=>array( $seconds / 604800,52),
+        $this->language_data[$this->language_id]['day']=>array( $seconds / 86400,7),
+        $this->language_data[$this->language_id]['hour']=>array( $seconds / 3600, 24),
+         $this->language_data[$this->language_id]['minute']=>array( $seconds / 60, 60),
+        $this->language_data[$this->language_id]['second']=>array( $seconds, 60 )
+        );
+       
+    foreach($bit as $k => $v)
+        if($v[0] > 0 && $v[0]<$v[1])  $elapsed = round($v[0],2) .' '. $k;
+       
+    return $elapsed;
+    }
+    
+/*
+http://software77.net/geo-ip/ cidr mask info 2 country
+
+*/
+
+
+//parse files for blog
+public function seofriendly($x) {
+
+$x=strip_tags(addslashes($x));
+$seoname = preg_replace('/\%/',' percentage',$x);
+$seoname = preg_replace('/\@/',' at ',$seoname);
+//$seoname = preg_replace('/\&/',' and ',$seoname);
+$seoname = preg_replace('/\s[\s]+/','-',$seoname);    // Strip off multiple spaces
+$seoname = preg_replace('/[\s\W]+/','-',$seoname);    // Strip off spaces and non-alpha-numeric
+$seoname = preg_replace('/^[\-]+/','',$seoname); // Strip off the starting hyphens
+$seoname = preg_replace('/[\-]+$/','',$seoname); // // Strip off the ending hyphens
+
+$seoname = strtolower($seoname); 
+return $seoname;
+}
+public function seofriendly_toplaintext($x) {
+$x= preg_replace('(-)',' ',$x);   
+
+return ucwords($x);
+}
+
+public function parse_passwordtext($a){
+if ($a==null){return true;}
+return addslashes(htmltentities($a));
+
+}
+
+//make text safe, convert symbols when placing in database, omit array to not use the bbcode #
+public function parse_generaltext($subject,$omit=null){
+if ($subject==null){return null;}
+
+
+
+$search  = array(
+'watch?v=',
+'&autoplay=1',
+'height=',
+'width=',
+'"', 
+'\'',
+);
+$replace = array(
+'v/',
+'',
+'',
+'',
+ '&#34;',
+ '&#39;',
+
+);
+
+    $bb[0] = "/\[b\](.*?)\[\/b\]/i";
+    $bbr[0] = "<strong>$1</strong>";
+    $bb[1] = "/\[i\](.*?)\[\/i\]/i";
+    $bbr[1] = "<i>$1</i>";
+$bb[2] = "/\[url\=(.*)\](.*)\[\/url\]/i";
+$bbr[2] = "<a href=\"$1\" target=\"_blank\">$2</a>";
+$bb[3] = "/\[img\](.*)\[\/img\]/i";
+$bbr[3] = "<img src=\"$1\">";
+
+$bb[4] = "/\[youtube\](.*)\[\/youtube\]/i";
+$bbr[4] = '<object width="350" height="200"><param name="movie" value="$1"></param><param name="allowScriptAccess" value="always"></param><embed width="350" height="200" src="$1" type="application/x-shockwave-flash" allowscriptaccess="always"></embed></object>';
+    $bb[5] = "/\[blockquote\](.*?)\[\/blockquote\]/i";
+    $bbr[5] = "<blockquote>$1</blockquote>";
+    $bb[6] = "/\[hidden\](.*?)\[\/hidden\]/i";
+    $bbr[6] = "<span id='hidden'>$1</span>";
+    $bb[7] = "/\[h2\](.*?)\[\/h2\]/i";
+    $bbr[7] = "<h2>$1</h2>";
+    $bb[8] = "/\[h3\](.*?)\[\/h3\]/i";
+    $bbr[8] = "<h3>$1</h3>";
+    $bb[9] = "/\[h4\](.*?)\[\/h4\]/i";
+    $bbr[9] = "<h4>$1</h4>";
+    $bb[10] = "/\[color\=(.*?)\](.*?)\[\/color\]/i";
+    $bbr[10] = "<font style='color:$1;'>$2</font>";
+    $bb[11] = "/\[code\](.*?)\[\/code\]/i";
+    $bbr[11] = "<pre class='code'>$1</pre>";
+    $bb[11] = "/\[p\](.*?)\[\/p\]/i";
+    $bbr[11] = "<p>$1</p>";
+$bb[12] = "/\[url\](.*)\[\/url\]/i";
+$bbr[12] = "<a href=\"$1\" target=\"_blank\">$1</a>";
+$bb[13] = "/\[#\](.*)\[\/#\]/i";
+$bbr[13] = "<a href=\"#post$1\">&rarr;$1</a>";
+
+
+$subject=strip_tags($subject, '');
+$subject=htmlentities($subject);
+
+
+
+$subject=str_ireplace($search, $replace, $subject);
+
+$subject = preg_replace($bb, $bbr, $subject);
+
+
+$subject=preg_replace('/<script\b[^>]*>(.*?)<\/script>/is', "", $subject);
+
+$subject=preg_replace('/on(.*?)\{4,10}(=)/is', "$1-", $subject);//nullify js event handlers
+
+
+return nl2br($subject);
+}
+
+		public function template_display_form($formtype){
+	global $security;
+	$_SESSION['name_id']=rand(0,100000);
+		$_SESSION['subject_id']=rand(0,100000);
+		$_SESSION['comment_id']=rand(0,100000);
+		$_SESSION['file_id']=rand(0,100000);
+		$this->name='name'.$_SESSION['name_id'];
+		$this->subject='subject'.$_SESSION['subject_id'];
+		$this->comment='comment'.$_SESSION['comment_id'];
+		$this->file='file'.$_SESSION['file_id'];
+		$this->newtopic=!isset($this->newtopic)?'':$this->newtopic;
+ 
+$_COOKIE['username']=!isset($_COOKIE['username'])?'':$_COOKIE['username'];
+			print "<div class='clear'></div><div class='postform'><form enctype='multipart/form-data' method='post' action='index.php?p=".$this->get_page_id()."&s=".$this->get_section_id()."&t=".$this->get_topic_id()."'>".$this->newtopic."<input title='Username' value='".$_COOKIE['username']."' name='".$this->name."' placeholder='Username' id='name' type='text' maxlength='".$this->settings['maxuser_length']."'><br /><input  title='Subject' value='' name='".$this->subject."' placeholder='Subject' id='subject' type='text' /><input type='submit' value='Post' id='submit'><br /><textarea  id='comment' name='".$this->comment."' placeholder='Comment' title='Comment' maxlength='".$this->settings['maxpost_length']."'></textarea><br /><input  id='file' type='file' name='".$this->file."' /><br /><input title='Password' type='password' placeholder='Pass' id='password' name='password'><br />".$formtype[0]->generate_captcha('','','')." <br /><input id='captcha' title='Captcha' placeholder='Captcha' type='input' name='captcha'><br /></form>".sprintf( $this->language_data[$this->language_id]['post_helpdescription'] ,$this->settings['maxfilesize']) ."</div>";
+	
+		}
+		
+
+function quickconvert($text, $key = '') {
+	// Author: halojoy, July 2006
+// Modified and commented by: laserlight
+    if ($key == '') {
+        return $text;
+    }
+    $key = str_replace(' ', '', $key);
+    if (strlen($key) < 8) {
+       return 'kerror';
+    }
+    $key_len = strlen($key);
+    if ($key_len > 32) {
+        $key_len = 32;
+    }
+    $key = substr($key, 0, $key_len);
+    $text_len = strlen($text);
+    $lomask = str_repeat("\x1f", $text_len); // Probably better than str_pad
+    $himask = str_repeat("\xe0", $text_len);
+    $k = str_pad("", $text_len, $key); // this one _does_ need to be str_pad
+    $text = (($text ^ $k) & $lomask) | ($text & $himask);
+    return $text;
+} 
+
+
+
+
+		public function get_board_total_filesize(){
+
+
+}
+
+public function upload_file($time) {
+if ($this->board_settings[$this->get_section_id()]['allowfileupload'] !=1) {
+	return true;
+}
+
+$allowedExts = array("txt","doc","pdf","gif", "jpeg", "jpg", "png");
+
+if (!isset( $_FILES ) || $_FILES['file'.$_SESSION['file_id']]['error']==4) {
+	//pass for empty upload
+	return true;
+}
+if ($_FILES['file'.$_SESSION['file_id']]['error'] > 0)
+    {
+    echo "upload error: " . $_FILES['file'.$_SESSION['file_id']]['error']  . "<br />"; return false;
+    }
+
+
+
+
+$temp = explode(".", $_FILES['file'.$_SESSION['file_id']]["name"]);
+$extension = end($temp);
+if ((($_FILES['file'.$_SESSION['file_id']]["type"] == "image/gif")
+|| ($_FILES['file'.$_SESSION['file_id']]["type"] == "image/jpeg")
+|| ($_FILES['file'.$_SESSION['file_id']]["type"] == "image/jpg")
+|| ($_FILES['file'.$_SESSION['file_id']]["type"] == "image/pjpeg")
+|| ($_FILES['file'.$_SESSION['file_id']]["type"] == "image/x-png")
+|| ($_FILES['file'.$_SESSION['file_id']]["type"] == "image/png")
+|| ($_FILES['file'.$_SESSION['file_id']]["type"] == "text/plain")
+|| ($_FILES['file'.$_SESSION['file_id']]["type"] == "application/msword")
+|| ($_FILES['file'.$_SESSION['file_id']]["type"] == "application/doc")
+|| ($_FILES['file'.$_SESSION['file_id']]["type"] == "application/pdf")
+
+)
+&& in_array($extension, $allowedExts))
+{
+ list($width, $height) = getimagesize($_FILES['file'.$_SESSION['file_id']]["tmp_name"]); 
+ $_SESSION['imgdat']=$width.'|'.$height;
+ if ($width > 4000 || $height > 4000 ) { echo 'image dimensions are too large.'; return false; }
+ if (($_FILES['file'.$_SESSION['file_id']]["size"] > $this->settings['maxfilesize']) ) { echo 'file is too large.'; return false;}
+if (isset($_SESSION['uploads']) && $_SESSION['uploads'] >= $this->settings['maxuploadpersession']) {echo '<div class="warning">max uploads reached</div>'; return false;}
+
+
+//'_'.  $_FILES['file'.$_SESSION['file_id']]['name']
+		if (file_exists($this->upload_directory .$time ) ) {
+			
+			echo 'file already exists - change the name.'; return false;
+		}else{
+			
+		move_uploaded_file( $_FILES['file'.$_SESSION['file_id']]['tmp_name'],
+			  $this->upload_directory .$time . '.' . $extension );
+			  $_SESSION['uploads']+=1;
+			  return true;
+		}
+
+
+}
+
+
+
+
+}
+public function upload_file_display($time) {
+
+if ($this->board_settings[$this->get_section_id()]['allowfileupload'] !=1) {
+	return null;
+}
+
+if (!isset( $_FILES['file'.$_SESSION['file_id']] )) {
+	return 'failed to init file name';
+}
+$temp = explode(".", $_FILES['file'.$_SESSION['file_id']]["name"]);
+$extension = end($temp);
+if ((($_FILES['file'.$_SESSION['file_id']]["type"] == "image/gif")
+|| ($_FILES['file'.$_SESSION['file_id']]["type"] == "image/jpeg")
+|| ($_FILES['file'.$_SESSION['file_id']]["type"] == "image/jpg")
+|| ($_FILES['file'.$_SESSION['file_id']]["type"] == "image/pjpeg")
+|| ($_FILES['file'.$_SESSION['file_id']]["type"] == "image/x-png")
+|| ($_FILES['file'.$_SESSION['file_id']]["type"] == "image/png")
+)
+)
+{
+	$dat=explode('|', $_SESSION['imgdat']);
+	$width=$dat[0];
+	$height=$dat[1];
+return '<img src="'.$this->upload_directory  .$time.'.'.$extension.'" title="'.$_FILES['file'.$_SESSION['file_id']]["size"].'b '.$width.'x'.$height.'">';
+
+}
+			if ( ($_FILES['file'.$_SESSION['file_id']]["type"] == "text/plain")
+			|| ($_FILES['file'.$_SESSION['file_id']]["type"] == "application/msword")
+			|| ($_FILES['file'.$_SESSION['file_id']]["type"] == "application/doc")
+			|| ($_FILES['file'.$_SESSION['file_id']]["type"] == "application/pdf")
+			)
+
+			{
+		return '<a href="'.$this->upload_directory .$time.'.'.$extension.'" target="_blank">>> '.$this->upload_directory . $_FILES['file'.$_SESSION['file_id']]["name"].'</a>';
+
+			}
+
+
+
+
+}
+
+public function view_blog($file) {
+
+
+if (!file_exists($this->blog_directory.''.$this->get_section_id().'/'.$this->get_topic_id().$this->settings['blogfileextension'])){
+return print '<div class="warning">Error couldnt find this blog topic.</div>';
+
+//touch($this->blog_directory.'/'.$this->get_section_id().'/'.$this->get_topic_id().'.php');
+}
+
+
+			$p=$this->readwritefile($this->blog_directory.''.$this->get_section_id().'/'.$this->get_topic_id().$this->settings['blogfileextension'],'r','');
+			
+		
+if (!$p||$p==null){
+
+print '<div class="warning">Error no posts in this topic or it is corrupted!</div>';
+return false;
+}
+print '<div style="font-size:130%;"><a href="'.$file.'?p=viewcategory&s='.$this->get_section_id().'"> &larr; </a></div>'.$p;
+$this->archive_blog_topic($this->get_section_id(),$this->get_topic_id());
+return true;
+
+}
+
+public function view_blogtopics($section,$file) {
+
+//show latest topics in a section
+
+if (!file_exists($this->blog_directory.'/'.$section.'')){
+return "print '<div class='warning'>{$section} directory doesnt exist, please create the section directory and add parameters to board_settings array!</div>';";
+}
+
+//include($this->blog_directory.'/'.$section.'/blog_forum_topics.php');
+
+$topics=$this->dirtoarray($this->blog_directory.''.$section.'/',false);
+
+if (!is_array($topics)||!$topics){
+
+print '<div class="warning">There are no board topics in this section!</div>';
+}
+
+
+$topics=array_reverse($topics);
+
+$x=0;
+	foreach ($topics as $k => $v) {
+
+	$p='';
+	if ($x<=$this->settings['contentpreview_list'] && $this->settings['contentpreview_list']!=0) {
+
+				$p=$this->readwritefile($this->blog_directory.''.$section.'/'.$topics[$k],'r','');
+				$p='<div class="post">'.strip_tags(substr($p,0,$this->settings['contentpreview_size']),'<a><img><embed><object><blockquote><p><b><i>').'</div>';
+				
+	}
+
+
+
+
+
+	//$time[$i]=filemtime($this->blog_directory.'/'.$section.'/'.$topics[$i]);
+	//put date time in file name
+	//is folder
+
+	$topic=substr($topics[$k],0,strlen($topics[$k])-4);
+	print '<div><a style="font-size:140%;" href="'.$this->settings['mainfile'].'?p=viewblog&s='.$section.'&t='.$topic.'">'.$this->seofriendly_toplaintext($topic).'</a>'.$p.'</div>';
+
+
+++$x;
+	}
+
+
+ $this->archive_blog_topics($section,sizeof($topics));
+
+
+}
+
+
+public function archive_blog_topic($section,$topic) {
+//archives old posts into a seperate archive archive_(date archived) when topic limit is reached
+
+//ARCHIVE FOR INDIVIDUAL TIME
+
+
+$archivefolder='archive';
+$archivesubfolder='archive'.date($this->settings['archivestamp']);
+		if (time()-filemtime($this->blog_directory.''.$section.'/'.$topic.$this->settings['blogfileextension']) > $this->settings['maxfileage_until_archive']) {
+					
+if (!is_dir($this->blog_directory.''.$section.'/'.$archivefolder.'')) {
+	mkdir($this->blog_directory.''.$section.'/'.$archivefolder.'',0755);
+}
+		if (file_exists($this->blog_directory.''.$section.'/'.$topic.$this->settings['blogfileextension'])) {
+				mkdir($this->blog_directory.''.$section.'/'.$archivefolder.'/'.$archivesubfolder,0755);
+							if (copy($this->blog_directory.''.$section.'/'.$topic.$this->settings['blogfileextension'],$this->blog_directory.''.$section.'/'.$archivefolder.'/'.$archivesubfolder.'/'.$topic.$this->settings['blogfileextension'])) {
+							  unlink($this->blog_directory.''.$section.'/'.$topic.$this->settings['blogfileextension']);
+							}
+							
+						}
+		}
+
+}
+
+public function archive_blog_topics($section,$totalpost) {
+//archives old posts into a seperate archive archive_(date archived) when topic limit is reached
+
+
+//ARCHIVE FOR TOTAL NUMBER OF BLOGS
+
+if($totalpost<$this->settings['maxtopics_until_archive']) {
+return false;
+}
+
+if (!file_exists($this->blog_directory.''.$section.'')){
+return "print '<div class='warning'>{$section} directory doesnt exist, please create the section directory and add parameters to board_settings array!</div>';";
+}
+
+//include($this->blog_directory.'/'.$section.'/blog_forum_topics.php');
+
+$topics=$this->dirtoarray($this->blog_directory.''.$section.'/');
+
+$archivefolder='archive';
+$archivesubfolder='archive'.date($this->settings['archivestamp']);
+
+if (!is_dir($this->blog_directory.''.$section.'/'.$archivefolder.'')) {
+	mkdir($this->blog_directory.''.$section.'/'.$archivefolder.'',0755);
+}
+
+
+for ($i=0;$i<sizeof($topics);$i++) {
+
+	if (file_exists($this->blog_directory.''.$section.'/'.$topics[$i].$this->settings['blogfileextension'])) {
+				mkdir($this->blog_directory.''.$section.'/'.$archivefolder.'/'.$archivesubfolder,0755);
+		if (copy($this->blog_directory.''.$section.'/'.$topics[$i].$this->settings['blogfileextension'],$this->blog_directory.'/'.$section.'/'.$archivefolder.'/'.$archivesubfolder.'/'.$topics[$i].$this->settings['blogfileextension'])) {
+		  unlink($this->blog_directory.''.$section.'/'.$topics[$i].$this->settings['blogfileextension']);
+		}
+
+	}
+
+
+}
+
+
+
+
+}
+
+public function get_list_all_blogsections(){
+
+$g=$this->dirtoarray($this->blog_directory);
+
+
+	foreach($g as $k=>$v){
+
+	
+
+	if ( isset($this->board_settings[$k]) ) {
+	print "<a href='index.php?p=viewcategory&s=$k'><div class='post' style='width:43%;float:left;'><img src='".$this->board_settings[$k]['icon']."' style='height:75px; float:left;padding:5px;'>".$this->board_settings[$k]['title']." ".$this->board_settings[$k]['description']."</div></a>";
+	}else{
+
+	print "<div><a href='index.php?p=viewcategory&s=$k'>".$k." (install in board_settings array 'classes.php')</div>";
+	}
+
+
+
+	}
+
+
+}
+
+public function write_posts($formtype=null,$userskipbotcheck=false) {
+
+
+
+/***************************
+
+NEW BLOG POSTING-
+
+conditions; 
+is user allowed to post blog
+requires a section
+
+otherwise only sys admin or ftp acess manual blog handwritten entries added to the blog section will appear to users
+
+***************************/
+
+
+
+$formtype[1]=$this->get_section_id()<=0||$this->get_section_id()==null?$formtype[1]:$this->get_section_id();
+
+
+if ($formtype[0]=='newtopic'){
+
+if ($this->board_settings[$this->get_section_id()]['ftpmode']==1) {
+	echo '<div>ftp mode, posting topics not allowed</div>';
+	return false;
+}
+
+if (isset($_POST['password']) && $this->board_settings[$this->get_section_id()]['password']!=$_POST['password'] && $this->board_settings[$this->get_section_id()]['password']!=null) {
+	echo '<div>incorrect password to post topic</div>';
+	return false;
+}
+
+if (  isset($_POST) && $formtype[2]->verify_captcha($userskipbotcheck) ) {
+
+	//lock posting after x days
+	$dateposted=explode(' ',$this->get_topic_id());
+	$stt=strtotime($dateposted[0]);
+	if (($dateposted[0]>0) && ($this->time)  >  $stt + (86400*$this->board_settings[$this->get_section_id()]['posttimelock']) ) {
+		echo '<div>topic is old and has expired</div>';
+		return false;
+	}
+
+	$_SESSION['last_post']=!isset($_SESSION['last_post'])?0:$_SESSION['last_post'];
+	
+			$lastpostsec=abs($_SESSION['last_post']-$this->time) ;
+		
+			
+	if (strlen($_POST['comment'.$_SESSION['comment_id']])<$this->settings['mintopic_length'] || ( $lastpostsec<=$this->settings['timebetween_topic']) ) {
+	echo '<div>wait '.$lastpostsec.' '.$this->settings['timebetween_topic'].'s between posting</div>';
+	return false;
+	}
+
+	$_SESSION['posts']=!isset($_SESSION['posts'])?1:$_SESSION['posts'];
+	if ( $_SESSION['posts']/(($this->time-$_SESSION['time_in'])/300)>$this->settings['post_per_fivemin'] ) {
+	echo '<div>you are posting too fast</div>';
+	return false;
+	}
+	
+	if ( strlen($_POST['subject'.$_SESSION['subject_id']])<=$this->settings['minsubject_length'] ) {
+		echo '<div>subject must be longer.</div>';
+		return false;
+	}
+
+
+	if (!$formtype[2]->user_adminpowerlevel()){
+	if ($this->masterusername==$_POST['name'.$_SESSION['name_id']]) {
+	$_POST['name'.$_SESSION['name_id']]='';
+	}
+
+	}
+	
+	$uploadtime=$this->time;
+				if ( $this->board_settings[$this->get_section_id()]['allowfileupload'] ==1 ) {
+			
+if ( !$this->upload_file($uploadtime) ) { return false; }		
+			
+			}
+	
+	
+	setcookie("username", $_POST['name'.$_SESSION['name_id']], $this->time+86400*365); 
+	$_POST['name'.$_SESSION['name_id']]=$_POST['name'.$_SESSION['name_id']]==null?$this->settings['defaultuser']:$_POST['name'.$_SESSION['name_id']];
+
+
+				
+	$this->readwritefile($this->blog_directory.''.$formtype[4]->get_section_id().'/'.date('Ymd').' '.$formtype[4]->seofriendly(substr($_POST['subject'.$_SESSION['subject_id']],0,$this->settings['maxsubject_length'])).$this->settings['blogfileextension'],'w',"
+	<div class='post0'><div class='usernamecolor'><a href='#post0' onclick='reply(0);' name='post0'>#0</a> ".date($this->settings['datestamp'])." &rarr; ".substr($formtype[4]->parse_generaltext($_POST['name'.$_SESSION['name_id']]),0,$this->settings['maxuser_length'])." <span id='uiid' style='display:;'>".$this->quickconvert($formtype[2]->get_ip(),$this->ipsalt)."</span></div> 
+<div id='post0'>
+	".substr($formtype[4]->parse_generaltext($_POST['comment'.$_SESSION['comment_id']],array()),0,$this->settings['maxtopic_length'])."
+	
+	
+<br />".$this->upload_file_display($uploadtime)."
+</div>
+	</div>
+				");	$_SESSION['last_post']=$this->time;
+	$_SESSION['posts']+=2;
+echo 'Posting...    <meta http-equiv="refresh" content="0;URL="http://'.$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF'].'?p=viewblog&s='.$formtype[4]->get_section_id().'&t='.date('Ymd').' '.$formtype[4]->seofriendly(substr($_POST['subject'.$_SESSION['subject_id']],0,$this->settings['maxsubject_length'])).'#post0" /> ';
+
+	header('Location: http://'.$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF'].'?p=viewblog&s='.$formtype[4]->get_section_id().'&t='.date('Ymd').' '.$formtype[4]->seofriendly(substr($_POST['subject'.$_SESSION['subject_id']],0,$this->settings['maxsubject_length'])).'#post0');
+ return false; 
+
+	return true;
+
+
+
+
+
+}
+
+
+
+
+}
+
+
+/***************************
+
+COMMENT TO BLOG POSTING
+
+tags for blog file
+[locked] = post locked, 
+
+***************************/
+if ($formtype[0]=='newpost'){
+
+//
+if (  isset($_POST) && $this->board_settings[$this->get_section_id()]['allowcomment']==1 && $formtype[2]->verify_captcha($userskipbotcheck) ) {
+
+
+	//lock posting after x days
+	$dateposted=explode(' ',$this->get_topic_id());
+	$stt=strtotime($dateposted[0]);
+
+	if (($dateposted[0]>0) && ($this->time)  >  $stt + (86400*$this->board_settings[$this->get_section_id()]['posttimelock']) ) {
+		echo '<div>topic is old and has expired</div>';
+		return false;
+	}
+	
+	
+		if ( stristr ( $this->get_topic_id(), '[locked]' ) !== false  ) {
+			
+			echo 'this topic is locked.';
+			return false;
+			
+		}
+
+	$_SESSION['last_post']=!isset($_SESSION['last_post'])?0:$_SESSION['last_post'];
+		$lastpostsec=abs($_SESSION['last_post']-$this->time) ;
+
+	if (strlen($_POST['comment'.$_SESSION['comment_id']])<$this->settings['minpost_length'] || ( $lastpostsec <= $this->settings['timebetween_comment']) ) {
+	echo '<div>wait '.($lastpostsec).' '.$this->settings['minpost_length'].'s between posting</div>';
+	return false;
+	}
+
+	$_SESSION['posts']=!isset($_SESSION['posts'])?1:$_SESSION['posts'];
+	if ( $_SESSION['posts']/(($this->time-$_SESSION['time_in'])/300)>$this->settings['post_per_fivemin'] ) {
+	echo '<div>you are posting too fast</div>';
+	return false;
+	}
+
+
+
+	if (!$formtype[2]->user_adminpowerlevel()){
+	if ($this->masterusername==$_POST['name'.$_SESSION['name_id']]) {
+	$_POST['name'.$_SESSION['name_id']]='';
+	}
+
+	}
+			$uploadtime=$this->time;
+			if ( $this->board_settings[$this->get_section_id()]['allowfileupload'] ==1 ) {
+if ( !$this->upload_file($uploadtime) ) {  return false; }		
+			
+			
+			}
+			
+	
+	setcookie("username", $_POST['name'.$_SESSION['name_id']], $this->time+86400*365); 
+	$_POST['name'.$_SESSION['name_id']]=$_POST['name'.$_SESSION['name_id']]==null?$this->settings['defaultuser']:$_POST['name'.$_SESSION['name_id']];
+
+	$r=$this->readwritefile($this->blog_directory.''.$this->get_section_id().'/'.$this->get_topic_id().$this->settings['blogfileextension'],'r','');
+				$totalpost=abs( sizeof(explode("<div class='post'>",$r)) );
+
+				if ($totalpost && $totalpost>=$this->board_settings[$this->get_section_id()]['maxpostsintopic']) { 
+					echo '<div>maximum of '.$this->board_settings[$this->get_section_id()]['maxpostsintopic'].' posts has been reached for this blog section.</div>';
+					return false; }
+				
+
+$this->readwritefile($this->blog_directory.''.$this->get_section_id().'/'.$this->get_topic_id().$this->settings['blogfileextension'],'a',"
+				
+				
+	<div class='post'><div class='usernamecolor'><a href='#post".$totalpost."' onclick='reply(".$totalpost.");' name='post".$totalpost."'>#".$totalpost."</a> ".date($this->settings['datestamp'])." &rarr; ".substr($formtype[4]->parse_generaltext($_POST['name'.$_SESSION['name_id']]),0,$this->settings['maxuser_length'])." <span id='uiid' style='display:;'>".$this->quickconvert($formtype[2]->get_ip(),$this->ipsalt)."</span></div> 
+<div id='post".$totalpost."'>
+	".substr($formtype[4]->parse_generaltext($_POST['comment'.$_SESSION['comment_id']],array()),0,$this->settings['maxpost_length'])."
+
+<br />".$this->upload_file_display($uploadtime)."
+</div>
+	</div>
+
+				");
+$_SESSION['last_post']=$this->time;
+	$_SESSION['posts']+=1;
+	//die('test post; '.exec('whoami').' posts'.$_SESSION['posts'].' lastpost'.$_SESSION['last_post']);
+echo 'Posting...    <meta http-equiv="refresh" content="3;URL="http://'.$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF'].'?p=viewblog&s='.$formtype[4]->get_section_id().'&t='.$formtype[4]->get_topic_id().'post'.$totalpost.'" /> ';
+	header('Location: http://'.$_SERVER['HTTP_HOST'].$_SERVER['PHP_SELF'].'?p=viewblog&s='.$formtype[4]->get_section_id().'&t='.$formtype[4]->get_topic_id().'#post'.$totalpost.'');
+	
+return true;
+
+
+
+
+
+}
+
+
+
+}
+
+
+
+
+}
+
+
+
+   
+	   public function smartphone_compatability() {
+		   
+
+
+		if(strpos($_SERVER['HTTP_USER_AGENT'],"iPhone")
+		|| strpos($_SERVER['HTTP_USER_AGENT'],"Android")
+		|| strpos($_SERVER['HTTP_USER_AGENT'],"webOS")
+		|| strpos($_SERVER['HTTP_USER_AGENT'],"iPod")) {
+		    return true;
+		 }
+return false;
+	}
+
+	
+
+	
+		
+}
+
+
+//members to read/write from the database returned as array, then processed-- just like the innate flat file system
+class Mysql_Hook extends Constants{
+private $mysql_root_password;
+private $database_names=array('');
+private $table_structure_paths=array('');
+
+
+}
+
+class UserTemplate extends Constants{
+
+	public $username;
+	private $userpassword;
+   public $userpower;
+    
+    public $pageicon;
+    public $metatag_description;
+public $metatag_keywords;
+    public $pagetitle;
+       public $metatag_pagetitle;
+    public function __construct(){
+    parent::__construct();
+
+//default page title
+	$this->pagetitle='THE GYRE REALITY'; 
+	$this->pageicon=$this->resource_directory.'gyre.png';
+           if ($_SESSION['page_views']>=0){
+    $_SESSION['page_views']+=1;
+}
+
+    }
+
+    public function testuserinfo() {
+       print '<div style="font-size:16pt; color:#0b0;background-color:black;">';
+       
+//      print  NodeFunctions::time_elapsed(time()-60*6966).' is time,';
+      print $this->get_user_powerlevel().' power level,'; 
+print $this->language.' language,';
+print $this->language_id.' lang id,';
+print $this->get_page_id().' this pageid,';
+print  $_SESSION['page_views'].' views,';
+print  $_SESSION['time_in'].' time in,';
+
+print '</div>';
+       
+       
+    }
+
+
+    
+    public function run_dynamic_page($arg){
+$security=new Security_and_SpamHandler;
+$node=new NodeFunctions;
+
+
+    switch($node->get_page_id()){
+default:
+case '':
+
+
+$this->template_start();
+
+//print '<div><h1>Staff Updates</h1></div>';
+
+$node->view_blogtopics('staff updates','index.php');
+
+print '<div class="clear"></div>';
+
+
+
+print '<div class="clear"></div>';
+
+
+$this->template_end();
+
+break;
+case 'viewarchive':
+$this->pagetitle='Archived old blog posts: '.$node->get_section_id();
+$this->pageicon='';
+
+$this->template_start();
+
+
+
+print '<div style="font-size:130%;"><a href="'.$this->settings['mainfile'].'?p=viewcategory&s='.$node->get_section_id().'"> &larr; </a></div><div class="clear"></div>';
+
+$folders=$node->dirtoarray($this->blog_directory.''.$node->get_section_id().'/',true,true);
+		if (!$folders) { print '<div class="warning">error finding blog archives</div>'; }else{
+
+		foreach ($folders as $k => $v ) 
+		{
+		print '<div><a target="_blank" href="'.$this->blog_directory.''.$node->get_section_id().'/'.$k.'">'.$k.'</a></div>';	
+
+		}
+
+		}
+
+print '<div class="clear"></div>';
+
+
+$this->template_end();
+
+break;
+case 'viewblog':
+$this->pagetitle=$node->seofriendly_toplaintext($node->get_topic_id());
+$this->pageicon=$this->board_settings[$node->get_section_id()]['icon'];
+$this->metatag_pagetitle=$node->seofriendly($node->get_topic_id());
+$this->metatag_description=substr($node->seofriendly($node->readwritefile($this->blog_directory.''.$node->get_section_id().'/'.$node->get_topic_id().$this->settings['blogfileextension'],'r','')),4,800);
+$this->metatag_keywords=implode(', ',explode('-',$this->metatag_description));
+$this->template_start();
+			
+		
+
+
+print '<div class="clear"></div>';
+
+
+$node->write_posts(array('newpost',$node->get_section_id(),$security,$arg,$node),$security->user_skipbotcheck());
+
+$node->view_blog('index.php');
+
+$node->template_display_form(array($security));
+
+print '<div class="clear"></div>';
+
+
+$this->template_end();
+
+break;
+
+case 'viewcategory':
+$this->pagetitle=$node->get_section_id()!=null?'&rarr; '.$this->board_settings[$node->get_section_id()]['title']:'List of boards';
+$this->pageicon=$node->get_section_id()!=null?$this->board_settings[$node->get_section_id()]['icon']:$this->pageicon;
+
+$this->metatag_pagetitle=$node->seofriendly($this->pagetitle);
+$this->metatag_description='list of boards ';
+
+$this->metatag_keywords='blog, gyre reality, catagory';
+
+
+$this->template_start();
+
+
+
+
+
+
+//view the topics in section
+if ($node->get_section_id()!=null) {
+
+print '<h3><img src="'.$this->board_settings[$node->get_section_id()]['icon'].'" style="height:50px; vertical-align:middle;padding:8px;">'.$this->pagetitle.'</h3><div><a href="?p=viewarchive&s='.$node->get_section_id().'&t='.$node->get_topic_id().'">archive</a></div>';
+
+$node->write_posts(array('newtopic',$node->get_section_id(),$security,$arg,$node),$security->user_skipbotcheck());
+$node->template_display_form(array($security));
+print '<div class="clear"></div>';
+$node->view_blogtopics($node->get_section_id(),'index.php');
+
+
+
+
+
+
+}else{
+//or list blog sections
+
+$node->get_list_all_blogsections();
+
+}
+
+print '<div class="clear"></div>';
+
+
+$this->template_end();
+
+break;
+
+
+    case 'staff':
+$admin=new AdministrativeTools;
+$this->pagetitle='Staff Administration';
+$this->metatag_pagetitle=$node->seofriendly($this->pagetitle);
+$this->metatag_description='staff administration ';
+
+$this->metatag_keywords='blog, gyre reality, catagory';
+
+
+$this->template_start();
+
+
+
+$admin->panelprocessquery();
+
+$this->template_end();
+break;
+    
+        case 'hfaq':
+	
+$this->pagetitle='Help/Faq';
+$this->metatag_pagetitle=$node->seofriendly($this->pagetitle);
+$this->metatag_description='list of blog catagories ';
+
+$this->metatag_keywords='blog, gyre reality, helpfaq';
+
+
+$this->template_start();
+
+    print '
+    <ol>
+    <h2>Rules</h2>
+<li>No Spam.</li>
+<li>No porn.</li>
+<li>No personal attacks on other users.</li>
+<li>No dupe image/file posts.</li>
+<li>Be nice.</li>
+<li><h4>Banning of users will be enforced if they break the rules.</h4></li>
+</ol>
+
+    <ul>
+    <h2>Info/Help</h2>
+    <li>What is the icon for gyre reality? <img src="'.$this->pageicon.'" style="float:right;padding:10px;"> the trisquel gnu/linux os logo, representing a celtic gyre symbol.
+</li>
+<li>What does the site name mean, why did I pick the name "Gyre Reality"? A gyre symbolically represents the transition from ego, materialist worldliness and the carnal physical awareness transformed to that of wisdom, enlightenment, nirvana and cosmic awareness. Reality is full of illusion, to fully know this requires understanding the pains and suffering of the human condition. Reality is a spiral flux of manifested illusions. What we claim to see or which appears to us is not as it always is in reality. Striving for awareness and transcendence over the weaknesses and vices of modern society is key to me. Create your own culture as Terrence Mckenna would put it. </li>
+	</ul>
+';
+    
+$this->template_end();
+break;
+
+    }
+    
+    }
+
+
+    
+    
+	public function template_start(){
+
+$loggedin=!isset($_COOKIE['password'])?'':'<li class="navlink"><a href="#">#captcha bypass</a></li>';
+	print '<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" lang="en-US">
+<head profile="http://gmpg.org/xfn/11">
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>'.$this->pagetitle.'</title>
+<meta http-equiv="expires" content="0">
+<meta http-equiv="Content-Type" content="text/html; charset=windows-1252">
+<meta name="title" content="'.$this->metatag_pagetitle.'">
+<meta name="description" content="'.$this->metatag_description.'">
+<meta name="keywords" content="'.$this->metatag_keywords.'">
+<meta name="robots" content="noodp, noydir" />
+<script type="application/javascript" src="'.$this->resource_directory.'lib_api/jquery-2.0.2.min.js"></script>
+<script type="application/javascript" src="'.$this->resource_directory.'main.js"></script>
+<link rel="stylesheet" type="text/css" href="http://fonts.googleapis.com/css?family=Special+Elite|PT+Serif">
+<link rel="stylesheet" href="'.$this->resource_directory.'classic.css" id="stylesheet" type="text/css" media="screen, projection" />
+<!--[if lte IE 8]><link rel="stylesheet" href="" type="text/css" media="screen, projection" /><![endif]-->
+<link rel="canonical" href="http://kk" />
+<link rel="alternate" type="application/rss+xml" title="RSS Feed" href="'.$this->rssfeed_file.'" />
+<link rel="pingback" href="http://kkk/xmlrpc.php" />
+<link rel="EditURI" type="application/rsd+xml" title="RSD" href="http://kkk/xmlrpc.php?rsd" />
+<meta name="prVerify" content="f6cada6fdaa763343866c96d3f8d1783" />
+<link rel="shortcut icon" type="image/png" href="'.$this->pageicon.'" />
+<link rel="apple-touch-icon-precomposed" href="'.$this->pageicon.'" />
+</head><body><div class="wrap"><a name="top"></a>
+				<div id="banner"><img src="res/banner.png"></div><div id="header">
+				
+					    <ul id="nav">
+					       <li class="navlink"><a href="index.php">Home</a>  
+						      <ul>
+			
+						  <li><a href="index.php?p=hfaq">Help and FAQ</a></li>
+						  <li><a href="index.php?p=staff">Login and Staff</a></li>
+<li><a href="index.php?p=viewcategory">View all Boards</a></li>
+						</ul>
+					      </li>
+			
+			
+
+					<li style="display:none;">
+					<input type="text" name="navsearch" id="navsearch" onKeyPress="eventcatch(event)" value="" title="Search...">
+					</li>
+
+<li class="navlink"><a href="chat/chat.php">Chat</a></li>
+<li class="navlink"><a href="http://www.youtube.com/channel/UCtPWswew2Rc-PpeXMAQlXyA" target="_blank">my youtube</a></li>
+'.$loggedin.'
+					    </ul> 
+					  <div class="content">';
+$this->top_ads();
+
+	}
+	
+		public function template_end(){
+$node=new NodeFunctions;
+print '</div></div></div>';
+		$this->bottom_ads();
+	print '<div class="footer"><ul><li><a href="index.php?p='.$node->get_page_id().'&s='.$node->get_section_id().'&t='.$node->get_topic_id().'#top">&uarr;&uarr;</a><a name="bottom"></a></li><li><a href="index.php">Home</a></li></ul><ul><li><a href="index.php?p=staff">Staff Functions</a></li></ul>
+	<ul style="margin:0px 35px 0px 0px;padding:0px;float:right;"><li>
+	<select title="Change color theme" onclick="changetheme();" id="changetheme">
+  <option value="classic" default title="default theme orange blue black">Classic</option>
+  <option value="earth">Earth</option>
+  <option value="youtube">YYoutube</option>
+</select> 
+</li></ul>
+
+</div></body></html>';
+
+	}
+	
+        public function top_ads()
+    {
+    
+    print "<div class='t_ads'></div>";
+    
+    }
+
+    public function bottom_ads()
+    {
+    print "<div class='b_ads'>ads go here</div>";
+    
+    }
+}
+$template=new UserTemplate;
+
+
+
+
+/*
+
+
+class A {
+    private $aa;
+    protected $bb = 'parent bb';
+
+    function __construct($arg) {
+       //do something..
+    }
+
+    private function parentmethod($arg2) {
+       //do something..
+    }
+}
+
+class B extends A {
+    function __construct($arg) {
+        parent::__construct($arg);
+    }
+    function childfunction() {
+        print $this->bb; 
+    }
+}
+
+$test = new B($some);
+$test->childfunction();
+
+
+*/
+
+
+?>

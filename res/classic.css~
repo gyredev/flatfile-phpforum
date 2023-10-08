@@ -1,0 +1,447 @@
+/*******************************************/
+/*
+
+ written by alex kalas, alexka762@gmail.com
+
+*/
+/*******************************************/
+
+
+body{
+background:url() 50% 50% #000;
+	color:#ababab;
+	font-family:monospace,georgia,sans-serif,serif;
+	margin:0px;
+	padding:0px;
+}
+
+blockquote{
+font-family:"Times New Roman",Georgia,Serif;
+font-size:150%;
+margin:30px 15px 30px 15px;
+padding:5px;
+text-indent:3em;
+color:#00eeaa;
+border:1px solid #dddddd;
+background-color:#000000;
+
+}
+
+#hidden{
+
+background-color:#000;
+color:#000;
+
+}
+#hidden:hover{
+color:#aa0;
+}
+
+h1{
+	text-transform:uppercase;
+	font-family:impact, serif;
+text-shadow: 4px 1px 1px #000;
+color:#ee9900;
+	line-height:0px;
+}
+h2{
+	font-size:145%;
+		font-family:impact, serif;
+	text-shadow: 4px 1px 1px #000;
+	line-height:0px;
+	color:#ff5500;
+}
+h3{
+	font-weight:bold;
+	font-family:serif;
+	font-style:;
+	text-shadow: 4px 1px 1px #000;
+		line-height:0px;
+		color:#33ff11;
+}
+h4{
+	font-weight:bold;
+	font-family:impact,serif;
+	font-style:;
+	font-size:125%;
+	text-shadow: 4px 4px 2px #000;
+		line-height:0px;
+		color:#ffee00;
+}
+
+.transparent_class {
+  /* IE 8 */
+  -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=50)";
+
+  /* IE 5-7 */
+  filter: alpha(opacity=80);
+
+  /* Netscape */
+  -moz-opacity: 0.8;
+
+  /* Safari 1.x */
+  -khtml-opacity: 0.8;
+
+  /* Good browsers */
+  opacity: 0.8;
+}
+a:link {
+	color:#ee9900;
+	text-decoration:none;
+}
+a:hover {
+	color:#eaeaea;
+}
+a:visited{
+	color:#ee9900;
+	text-decoration:underline;
+}
+
+p{
+	text-indent:3em;
+	line-height:130%;
+	
+}
+
+.subject{
+text-indent:3em;
+font-size:150%;
+color:#33ee33;
+text-shadow: 8px 2px 2px #000, 3px 3px 5px #660;
+}
+
+.fileupload{
+
+background-color:#500;
+margin:10px;
+}
+
+ul.square {
+	list-style-type:square;
+	}
+
+ol.rules{
+list-style-type:decimal;
+}
+
+
+.post {
+border:1px solid #999;
+padding:6px;
+margin:3px;
+text-align:left;
+background-color:#dedede;
+color:#101010;
+display:block;
+width:auto;
+vertical-align:top;
+}
+.post0 {
+border:1px solid #444;
+padding:6px;
+margin:3px;
+text-align:left;
+
+display:block;
+width:auto;
+vertical-align:top;
+}
+
+
+.firstpost{
+padding:0px;
+
+}
+
+
+.post .post_usernamecolor,.post0 .post_usernamecolor{
+	color:#cc9944;
+}
+
+
+
+.post .post_infobar,.post0 .post_infobar{
+	float:top;
+	vertical-align:top;
+
+
+}
+.postform{
+	display:block;
+	border:1px solid #404040;
+	width:420px;
+	clear:both;
+	float:left;
+	padding:5px;
+	margin:5px;
+}
+.postform #name{
+	width:250px;
+}
+.postform #subject{
+	width:250px;
+}
+.postform #comment{
+	width:350px;
+	height:125px;
+}
+.postform #password{
+	width:50px;
+}
+.postform #captcha{
+	width:150px;
+}
+
+.wrap {
+-moz-border-radius: 25px 10px / 10px 25px;
+border-radius: 25px 10px / 10px 25px;
+background-color:#1a1a1a;
+text-align:left;
+width:65%;
+display:block;
+padding:10px;
+margin:15px 0px 70px 15%;
+border:1px solid #333;
+}
+.t_ads{
+	vertical-align:center;
+	float:center;
+	text-align:center;
+	clear:both;
+
+
+}
+.b_ads{
+	vertical-align:center;
+	float:center;
+	text-align:center;
+	clear:both;
+}
+.footer{
+	min-height:200px;
+	text-align:center;
+	background-color:#101010;
+	border-top:1px solid #333;
+}
+
+.footer ul li {
+		list-style: none; 
+		list-style-type:none;
+		text-align:left;
+		max-width:155px;
+		width:125px;
+}
+
+.footer ul{
+	float:left;
+}
+    a.goup {
+        display:block;
+        width:228px;
+        height:49px;
+        background:url(btn_sprite.gif) 0 0 no-repeat;
+        text-indent:-999em;    
+    }
+        
+    a.goup:hover {
+        background:url(btn_sprite.gif) 0 -51px no-repeat;
+    }
+	
+	
+.clear{
+	clear:both;
+}
+
+.success{
+color:#333;
+background-color:#010;
+margin:5px;
+}
+.success :hover{
+color:#333;
+background-color:#020;
+margin:5px;
+}
+
+.error,.warning{
+color:#f00;
+background-color:#100;
+margin:5px;
+}
+.error:hover,.warning:hover{
+color:#f90;
+background-color:#400;
+}
+
+.captcha{
+
+color:#0066cc;
+}
+
+.staff_help{
+margin:5px;
+color:#fe0;
+}
+.staff_terminal{
+	color:#0c0;
+	font-family:#verdana;
+	font-size:150%;
+	background-color:#000000;
+width:700px;
+height:400px;
+}
+.staff_terminal:hover{
+	color:#0a0;
+	font-family:#verdana;
+	font-size:150%;
+	background-color:#000000;
+}
+
+#banner{
+-moz-border-radius: 25px 10px / 10px 25px;
+border-radius: 25px 10px / 10px 25px;
+text-shadow: 4px 1px 1px #000;
+background:url(tropical-island.jpg) 50% 40% #000 repeat;
+	height: 190px; 
+padding:0px;
+margin:0px 0px 25px 0px;
+clear:both;
+text-align:center;
+vertical-align:center;
+font-size:3em;
+font-family:impact;
+color:#77ee77;
+}
+
+#header { 
+padding:5px;
+margin:-75px 0px 15px 0px;
+} 
+#nav {  
+
+
+	/*font-family:"georgia", serif; 
+	float:; 
+*/
+padding:0px;
+	margin:0px;
+}
+.content {  
+
+min-height:255px;
+word-wrap: break-word;
+
+
+padding:5px;
+margin:44px 0px 0px 0px;
+
+}
+
+
+#nav li { 
+-moz-border-radius: 25px 10px / 10px 25px;
+border-radius: 25px 10px / 10px 25px;
+	list-style: none; 
+	float: left; 
+min-width:150px;
+	height: 30px; 
+	line-height: 30px; 
+	text-align: center;
+background-color:#1a1a1a;
+z-index:5;
+} 
+#nav li a { 
+	color: #eeaa00; 
+	text-decoration: none; 
+	display: block; 
+-moz-border-radius: 15px 10px / 10px 15px;
+border-radius: 15px 10px / 10px 15px;
+font-family:impact;
+z-index:6;
+} 
+#nav li a:hover { 
+-moz-border-radius: 25px 10px / 10px 25px;
+border-radius: 25px 10px / 10px 25px;
+	background-color: #101010; 
+}
+#home .navlink a, #home .navlink a:hover,
+#news .news a, #news .news a:hover {
+background-color:#1a1a1a;
+	color: #000;
+	cursor: default;  
+	
+} 		
+#nav li ul { 
+	position: absolute;  
+	display: none; 
+
+} 
+#nav li:hover ul { 
+	display: block; 
+} 
+#nav li ul li { 
+	float: none; 
+	display: inline; 
+	
+}
+#nav li ul li a { 
+	width: 218px; 
+	position: relative; 
+	border-left: 1px solid black; 
+	border-right: 1px solid black; 
+	border-bottom: 2px solid black; 
+background-color:#1a1a1a;
+	text-align:left;
+	color: #00aa55; 
+		margin:0px 0px 0px -40px;
+	padding:0px 0px 0px 9px;
+letter-spacing:1pt;
+	background-image:url(nav_bg.gif);
+}
+#nav li ul li .first a { 
+	width: 218px; 
+	position: relative; 
+	border-left: 1px solid black; 
+	border-right: 1px solid black; 
+	background: #131313; 
+	text-align:left;
+	color: #33da33; 
+		margin:0px 0px 0px -42px;
+	padding:0px 0px 0px 15px;
+}
+
+#nav li ul li a:hover { 
+	color: #eeeeee; 
+}
+#navsearch{
+font-weight:bold;
+width:115px;
+margin-bottom:15px;
+	line-height:15px;
+	vertical-align:center;
+	font-size:75%;
+	text-align:top;
+	vertical-align:center;
+}
+
+/* fixed position good for bottom messaging texts*/
+
+.index_feedstaffupdates{
+	float:right;
+	margin:10px;
+	padding:5px;
+	border:1px solid #111;
+	clear:right;
+	width:200px;
+	height:500px;
+	vertical-align:top;
+
+
+}
+.index_board_recentactivity_widget {
+	
+	
+	
+}
+
+

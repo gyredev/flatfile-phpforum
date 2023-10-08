@@ -1,0 +1,18 @@
+how to use
+
+
+the blog directory is in : data/blog/
+to add a blog section go to the blog directory and make new folder
+
+
+each blog post goes as the following:
+
+(date)( )ufos-landing-washington.htm
+(will print itself as raw file if file accessed directly.)
+
+blog topics and user posts to that topic are all self contained in one file! On order for your native apache file ordering to work properly sorting newest and oldest topics, you must use the following format for files if uploading updates to your blog via ftp.
+ 
+[4 digityear][2  digit month trailing zero][2 digit day trailing zero] [ space ] grey is a good color[.htm]
+
+contents of file if used in ftp allows you as server admin to put any html/js support you want on the page.
+

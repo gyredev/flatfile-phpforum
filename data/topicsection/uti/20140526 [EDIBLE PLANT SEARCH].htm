@@ -1,0 +1,555 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html><head>
+<meta http-equiv="content-type" content="text/html; charset=windows-1252"></head><body><div style="background-color:#ffffff;">
+<title>[EDIBLE PLANT SEARCH]</title>
+
+<script type="text/javascript">
+/*
+written by
+diogenes.sinope at yandex dotcom
+*/
+
+
+
+var activitycolorswitch=false;
+
+
+function SetCookie(cookieName,cookieValue,nDays) {
+ var today = new Date();
+ var expire = new Date();
+ if (nDays==null || nDays==0) nDays=1;
+ expire.setTime(today.getTime() + 3600000*24*nDays);
+ document.cookie = cookieName+"="+escape(cookieValue)
+                 + ";expires="+expire.toGMTString();
+}
+function readCookie(cookieName) {
+ var re = new RegExp('[; ]'+cookieName+'=([^\\s;]*)');
+ var sMatch = (' '+document.cookie).match(re);
+ if (cookieName && sMatch) return unescape(sMatch[1]);
+ return '';
+}
+
+function addElement() {
+
+var softwaretitle="[EPS 3.0]";
+
+  var ni = document.getElementById('createsearch');
+
+  var numi = document.getElementById('theValue');
+
+  var num = (document.getElementById('theValue').value -1)+ 2;
+
+  numi.value = num;
+
+  var newdiv = document.createElement('div');
+
+  var divIdName = 'gens'+num+'';
+
+  newdiv.setAttribute('id',divIdName);
+
+  
+  ni.appendChild(newdiv);
+
+}
+function removeElement(divNum) {
+
+  var d = document.getElementById('myDiv');
+
+  var olddiv = document.getElementById(divNum);
+
+  d.removeChild(olddiv);
+
+}
+
+
+function eventcatch(e) {
+     var key;
+
+     if(window.event)
+          key = window.event.keyCode; 
+     else
+          key = e.which; 
+
+if(key == 13) {
+        go();
+    }
+}
+
+function showhide(a){
+
+if (!a||a==null){alert('not found'); return;}
+
+		if (a.style.display!=""&&a.style.display=="none"){
+
+		a.style.display='block';
+		
+		}else{
+		if (1==1)
+		a.style.display='none';
+		}
+		
+}
+
+function configmenu() {
+var ts=readCookie('cachesearcht') ;
+var z=readCookie('cachesearch') ;
+var y=document.getElementById('configmenusearchcache');
+
+
+
+
+showhide(y);
+
+
+
+y.innerHTML="<div title=\"close menu\" onclick=\"configmenu();\" id=\"closemenu\">[ X ]</div>"+z+"<br />["+z.length+"] ";
+}
+
+function rancolor(x){
+
+return Math.floor(Math.random()*x);
+
+}
+
+function scrollToTop(x)
+
+{
+
+
+//document.getElementById("content").scrollTop = strPos; //Enter your desired Position
+
+document.getElementById(x).scrollTop = 0; //It scrolls to top
+document.getElementById(x).scrollTop;
+}
+
+
+function ajaxRequest(){
+ var activexmodes=["Msxml2.XMLHTTP", "Microsoft.XMLHTTP"] //activeX versions to check for in IE
+ if (window.ActiveXObject){ //Test for support for ActiveXObject in IE first (as XMLHttpRequest in IE7 is broken)
+  for (var i=0; i<activexmodes.length; i++){
+   try{
+    return new ActiveXObject(activexmodes[i])
+   }
+   catch(e){
+    //suppress error
+   }
+  }
+ }
+ else if (window.XMLHttpRequest) // if Mozilla, Safari etc
+  return new XMLHttpRequest()
+ else
+  return false
+}
+
+//-------
+
+
+//AJAX REQUEST
+var mypostrequest=new ajaxRequest()
+mypostrequest.onreadystatechange=function(){
+ if (mypostrequest.readyState==4){
+  if (mypostrequest.status==200 || window.location.href.indexOf("http")==-1 && mypostrequest.responseText!=null){
+   document.getElementById("pfaf").innerHTML=encodeURIComponent(mypostrequest.responseText)
+  }
+  else{
+   alert("An error has occured making the request")
+  }
+ }
+}
+
+function run_post_search(aa)
+{
+var searchvalue=encodeURIComponent(aa)
+//var parameters="ctl00$txtSearch="+searchvalue
+
+var parameters="?s="+searchvalue
+mypostrequest.open("POST", "http://www.google.com", true)
+mypostrequest.setRequestHeader("Content-type", "application/x-www-form-urlencoded")
+mypostrequest.send(parameters)
+}
+//window.open('http://www.pageresource.com/jscript/jex5.htm','mywindow','width=400,height=200')
+//document.form_name.submit();
+//document.getElementById('form_id').submit();
+
+/////////////////////////////////////////////////////////////
+
+
+function setvalue(x,y){
+
+a=document.getElementById(x);
+
+a.value=y;
+}
+
+
+function runcachesearch(x) {
+var ts=readCookie('cachesearcht') ;
+var c=readCookie('cachesearch') ;
+/*
+var t=readCookie('cachesearcht') ;
+				if (lastr.length>4000 )
+				{
+				SetCookie('cachesearcht',1,360);
+				return true;
+				}
+*/
+
+	if (x.length>500 || x=='')
+	{
+	alert('invalid search length');
+	
+return;
+	
+	}
+
+
+
+var cst=ts+1;
+var nn=parseInt(cst);
+			SetCookie('cachesearcht',nn,360);
+			SetCookie("cachesearch",""+x+","+c,360);
+}
+
+
+function req_openfsrc(a,b)
+{
+a.src=b;
+
+
+setTimeout("a.src=b",4000);
+setTimeout("csrc(a,b)",5000);
+
+}
+function csrc(z,x){
+z.src=x;
+}
+
+function changetitle(x){
+
+
+document.title = x+' '+softwaretitle+' ';
+if (!document.title)
+{
+alert('change title dont work');
+}
+
+}
+
+
+function go(){
+var ts = Math.round((new Date()).getTime());
+
+
+var done=false;
+var activity=document.getElementById('createsearch');
+
+var search=document.getElementById('a').value;
+document.getElementById('a').value='';
+
+if (search=='/hist') { configmenu();  return; }
+if (search=='/clear') { activity.innerHTML=''; return; }
+if (search=='/help'||search=='/?') { activity.innerHTML='<div style="color:red;font-weight:bold;">view history = /hist<br />clear searches = /clear<br />*view list of commands = /? /help</div>'+activity.innerHTML; return; }
+
+if (search==null||search==''||search==' '||search.length<3) { activity.innerHTML='<div style="color:green;font-weight:bold;">'+search+' voided search . . .</div>'+activity.innerHTML; return; }
+
+		//run_post_search();
+
+//http://search.yahoo.com/search?p=
+var engine='https://www.google.com/#q=';
+
+/*
+req_openfsrc(document.getElementById('pfaf'),engine+"http://pfaf.org/ "+search+"");
+req_openfsrc(document.getElementById('naturalmedicinalherbs'),engine+"http://www.naturalmedicinalherbs.net/ "+search+"");
+req_openfsrc(document.getElementById('eattheweeds'),engine+"http://www.eattheweeds.com/ "+search+"");
+req_openfsrc(document.getElementById('ixe'),engine+"is "+search+" edible");
+req_openfsrc(document.getElementById('epx'),engine+"edible plant "+search+"");
+
+req_openfsrc(document.getElementById('fdatoxic'),"http://www.accessdata.fda.gov/scripts/plantox/TextResults.cfm?dls=11&q="+search+"&pn=10&sc=");
+
+req_openfsrc(document.getElementById('propagationcutting'),engine+"propagate "+search+" from cuttings");
+req_openfsrc(document.getElementById('propagationseed'),engine+"propagate "+search+" from seed");
+req_openfsrc(document.getElementById('propagationgraft'),engine+"propagate "+search+" from graft");
+
+*/
+
+
+
+//run_post_search(search);
+scrollToTop('top');
+
+runcachesearch(search);
+
+
+//while(done==false && e.src!="http://www.pfaf.org/user/DatabaseSearhResult.aspx?serach="+search+"") { }
+
+ var tt=parseInt(Math.round((new Date()).getTime())-ts);
+ var bgcolor="bgcolor2";
+if (activitycolorswitch==false)
+{
+activitycolorswitch=true;
+bgcolor="bgcolor1";
+}else{
+
+activitycolorswitch=false;
+}
+
+var textcolor='color: rgb('+rancolor(256)+','+rancolor(256)+','+rancolor(256)+'); ';
+var abtext="&bull;  ";
+var cdtext="  &crarr;";
+activity.innerHTML='<div style="'+textcolor+'" id="'+bgcolor+'">'+abtext+'<a href="'+engine+'germination time of '+search+'" target="_blank">germination time of '+search+'</a>'+cdtext+'</div>'+activity.innerHTML;
+
+activity.innerHTML='<div style="'+textcolor+'" id="'+bgcolor+'">'+abtext+'<a href="'+engine+'seed viability length of '+search+'" target="_blank">seed viability length of '+search+'</a>'+cdtext+'</div>'+activity.innerHTML;
+
+activity.innerHTML='<div style="'+textcolor+'" id="'+bgcolor+'">'+abtext+'<a href="'+engine+'minimum temperature hardiness '+search+'" target="_blank">CLIMATE ZONE '+search+'</a>'+cdtext+'</div>'+activity.innerHTML;
+activity.innerHTML='<div style="'+textcolor+'" id="'+bgcolor+'">'+abtext+'<a href="'+engine+'fda toxic '+search+'" target="_blank">FDA TOXIC '+search+'</a>'+cdtext+'</div>'+activity.innerHTML;
+activity.innerHTML='<div style="'+textcolor+'" id="'+bgcolor+'">'+abtext+'<a href="'+engine+'eattheweeds.com '+search+'" target="_blank">eattheweeds.com '+search+'</a>'+cdtext+'</div>'+activity.innerHTML;
+activity.innerHTML='<div style="'+textcolor+'" id="'+bgcolor+'">'+abtext+'<a href="'+engine+''+search+' propagated by scion grafting" target="_blank">'+search+' propagated by scion grafting</a>'+cdtext+'</div>'+activity.innerHTML;
+activity.innerHTML='<div style="'+textcolor+'" id="'+bgcolor+'">'+abtext+'<a href="'+engine+''+search+' propagated by air layering" target="_blank">'+search+' propagated by air layering</a>'+cdtext+'</div>'+activity.innerHTML;
+activity.innerHTML='<div style="'+textcolor+'" id="'+bgcolor+'">'+abtext+'<a href="'+engine+''+search+' propagated by cutting" target="_blank">'+search+' propagated by cutting</a>'+cdtext+'</div>'+activity.innerHTML;
+activity.innerHTML='<div style="'+textcolor+'" id="'+bgcolor+'">'+abtext+'<a href="'+engine+''+search+' propagated by seed" target="_blank">'+search+' propagated by seed</a>'+cdtext+'</div>'+activity.innerHTML;
+
+
+activity.innerHTML='<div style="'+textcolor+'" id="'+bgcolor+'">'+abtext+'<a href="'+engine+'medicinal '+search+'" target="_blank">MEDICINAL '+search+'</a>'+cdtext+'</div>'+activity.innerHTML;
+
+activity.innerHTML='<div style="'+textcolor+'" id="'+bgcolor+'">'+abtext+'<a href="'+engine+'is '+search+' edible" target="_blank">IS '+search+' EDIBLE</a>'+cdtext+'</div>'+activity.innerHTML;
+activity.innerHTML='<div style="'+textcolor+'" id="'+bgcolor+'">'+abtext+'<a href="'+engine+'is '+search+' edible pfaf" target="_blank">IS '+search+' EDIBLE pfaf</a>'+cdtext+'</div>'+activity.innerHTML;
+
+
+activity.innerHTML='<div style="'+textcolor+'  v-align:bottom; clear:both;" align="right"><a style="font-size:10pt;" href="#top" onclick="scrollToTop(\"top\");">Go to top^ '+tt+'ms</a></div>'+activity.innerHTML;
+
+
+changetitle(search);
+
+done=true;
+
+tt=0;
+ts=null;
+
+}
+
+
+	function run_msearch(x,y){
+
+
+//changetitle(x);
+
+
+
+if (x=='gd'){
+
+req_openfsrc(document.getElementById('msearch'),"http://www.eattheweeds.com/?s="+document.getElementById('ls').value+"");
+
+}
+
+//req_openfsrc(document.getElementById('msearch'),'http://www.google.com/');
+
+			if (y!=null && x==null){
+		alert('not yet functional');
+
+			}else{
+			return false;
+				}
+
+
+	}
+
+
+function createsearch() {
+var run;
+var test=prompt("pick a search url","");
+
+run_msearch(0,test);
+
+}
+
+
+
+
+</script>
+
+<style>
+body{
+font-size:80%;
+font-family:sans-serif,verdana;
+background-color:#eeeeee;background-image: url(); 
+
+}
+
+body a:link{
+color:#505050;
+font-weight:bold;
+text-decoration:none;
+}
+
+
+body a:visited{
+color:#001099;
+font-weight:bold;
+text-decoration:underline;
+background-color:#fff;
+}
+
+body a:hover{
+color:#001099;
+font-weight:bold;
+text-decoration:none;
+}
+
+/*
+search inp field
+*/
+
+#a{
+margin:15px 0px 15px 15px;
+font-size:200%;
+font-weight:bold;
+color:#cccccc;
+background-color:#111111;
+}
+
+#searchbtn{
+font-size:100%;
+font-weight:bold;
+color:#cccccc;
+background-color:#111111;
+}
+
+
+#ls {
+color:#ccc;
+background-color:#111;
+font-weight:bold;
+overflow:auto;
+width:160px;
+max-width:400px;
+border:none;
+padding:0px;
+margin:0px;
+}
+
+
+#configmenusearchcache {
+border:1px dashed #0ff;
+background:url(),repeat, 0%, 0%;
+background-color:#333;
+color:#d0d0d0;
+font-size:120%;
+position:absolute;
+top:1%;
+left:10%;
+width:80%;
+min-width:500px;
+height:700px;
+
+display:none;
+padding:25px;
+word-wrap: break-word;
+
+}
+
+#configbutton {
+border:1px dotted green;
+font-size:100%;
+
+
+}
+#bgcolor1{
+text-align:center;
+background-color:#dedede;
+}
+
+#bgcolor2{
+text-align:center;
+background-color:#888888;
+background-position:80% 20%;
+background-attachment:fixed;
+}
+
+#createsearch{
+font-size:15pt;
+overflow:visible;
+border:0.5px dashed #333444;
+padding:5px;
+}
+
+#createsearch a:link{
+color:#009;
+}
+#createsearch a:hover{
+color:#f50;
+}
+#createsearch a:visited{
+color:#333;
+}
+
+
+
+
+#activity{
+margin:0px;
+padding:0px;
+height:45px;
+background-color:#cecece;
+
+}
+#open{
+display:block;
+}
+
+#clear{
+clear:both;
+}
+
+#topfunctions{
+height:25%;
+
+overflow:auto;
+
+}
+
+
+#showtogglelinks{
+position:absolute;
+top:29px;
+left:0px;
+
+width:97.9%;
+height:100px;
+overflow:auto;
+
+background-color:#eee;
+border:1px solid black;
+display:none;
+padding:10px;
+margin:0px 0px 0px 0px;
+
+}
+
+#closemenu{
+color:red; background-color:#000000;
+text-align:center;
+
+}
+
+</style>
+<a name="top" id="top"></a>
+				<div id="topfunctions">
+<div id="configmenusearchcache" style="display:none;"></div>
+
+
+
+				<div style="height:;width:;" align="center"><input onmouseover="" title="Edible plant look up; common name or genus/species. Enter /? for help/info." id="a" name="a" onkeypress="return eventcatch(event)" "="" style="width:750px;" type="text"><input onmousedown="go();" title="search plant info" value="Search" id="searchbtn" type="submit"><br>
+</div>
+	<a href="http://pfaf.org/user/DatabaseSearhResult.aspx" target="_blank">PFAF database </a> | <a href="http://www.eattheweeds.com/" target="_blank">Green Deans EAT THE WEEDS</a>
+				</div>
+	
+	
+			
+								<div id="createsearch"></div>
+
+
+	
+				</div>
+
+
+</body></html>
